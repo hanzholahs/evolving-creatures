@@ -22,19 +22,19 @@ Some adjustments to the implementation of evolving virtual creatures by Sims (19
 
 ## Progress
 
-- [x] Virtual Creature
-    - [x] Basic genome and phenotype class
-    - [x] Creature class
-- [x] Environment
-    - [x] Simulator class
-    - [x] Creature XML read and write
-    - [x] Creature movements
-- [x] New generation
-    - [x] Selection of parents
-    - [x] Mating of parents
-    - [x] Mutation of genes
+- [x] ~Virtual Creature~
+    - [x] ~Basic genome and phenotype class~
+    - [x] ~Creature class~
+- [x] ~Environment~
+    - [x] ~Simulator class~
+    - [x] ~Creature XML read and write~
+    - [x] ~Creature movements~
+- [x] ~New generation~
+    - [x] ~Selection of parents~
+    - [x] ~Mating of parents~
+    - [x] ~Mutation of genes~
 - [ ] Simulation run
-    - [x] Execution trial
+    - [x] ~Execution trial~
     - [ ] Simulation run
 - [ ] Report writing
 
