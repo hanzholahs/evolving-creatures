@@ -20,6 +20,24 @@ Some adjustments to the implementation of evolving virtual creatures by Sims (19
 * In the implementation, it is impossible for a body part to be connected with two or more different body parts with different genotype. If there is four genotypes connected with each other, each body type defined by its genotype is connected only to other parts from two other genotypes at maximum.
 * The behavioural selection used was only walking towards a specific direction. The fitness of a creature is based on the distance. This means that the genes of creatures with the longest distance traveled are more likely to survived for the next generation. Simpler creatures are preferred so that there is a penalty for each creature with larger number of body parts.
 
+## Progress
+
+- [x] Virtual Creature
+    - [x] Basic genome and phenotype class
+    - [x] Creature class
+- [x] Environment
+    - [x] Simulator class
+    - [x] Creature XML read and write
+    - [x] Creature movements
+- [x] New generation
+    - [x] Selection of parents
+    - [x] Mating of parents
+    - [x] Mutation of genes
+- [ ] Simulation run
+    - [x] Execution trial
+    - [ ] Simulation run
+- [ ] Report writing
+
 
 ## Reference
 
