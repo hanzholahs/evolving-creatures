@@ -28,7 +28,7 @@ class Creature:
         self.__expanded_links = None
 
     def update_dna(self, new_dna):
-        assert len(self.spec) == new_dna.shape[-1]
+        assert len(genome.Genome.get_spec()) == new_dna.shape[-1]
         self.dna = new_dna
         self.start_position = (0, 0, 0)
         self.last_position = (0, 0, 0)
