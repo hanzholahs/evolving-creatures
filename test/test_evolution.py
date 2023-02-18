@@ -48,7 +48,7 @@ class SelectionTest(unittest.TestCase):
         self.assertLess(fits[0], fits[1])
         self.assertLess(fits[0], fits[2])
         self.assertLess(fits[1], fits[2])
-
+        
     def testParentSelection(self):
         self.assertIsNotNone(evolution.Selection.select_parents)
         fits = [1, 1, 1, 2, 5]
@@ -59,46 +59,6 @@ class SelectionTest(unittest.TestCase):
             self.assertIn(p1, parents)
             self.assertIn(p2, parents)
             self.assertNotEqual(p1, p2)
-
-class MatingTest(unittest.TestCase):
-    def testMatingClass(self):
-        self.assertIsNotNone(evolution.Mating)
-        self.assertIsNotNone(evolution.Mating.mate_crossover)
-        self.assertIsNotNone(evolution.Mating.mate_grafting)
-
-    def testGraftingGenes(self):
-        gene_1 = genome.Genome.init_genome(10)
-        gene_2 = genome.Genome.init_genome(10)
-        for _ in range(15):
-            child_gene = evolution.Mating.mate_grafting(gene_1, gene_2)
-            self.assertIsNotNone(child_gene)
-            self.assertGreater(len(child_gene), 1)
-            self.assertLess(len(child_gene), len(gene_1) + len(gene_2))
-        
-        genome_1 = genome.Genome.init_genome(10, 10)
-        genome_2 = genome.Genome.init_genome(10, 10)
-        for _ in range(15):
-            child_genome = evolution.Mating.mate_grafting(genome_1, genome_2)
-            self.assertIsNotNone(child_genome)
-            self.assertGreater(len(child_genome), 1)
-            self.assertLess(len(child_genome), len(genome_1) + len(genome_2))
-
-    def testCrossoverGenes(self):
-        gene_1 = genome.Genome.init_genome(10)
-        gene_2 = genome.Genome.init_genome(10)
-        for _ in range(15):
-            child_gene = evolution.Mating.mate_crossover(gene_1, gene_2)
-            self.assertIsNotNone(child_gene)
-            self.assertGreater(len(child_gene), 1)
-            self.assertLess(len(child_gene), len(gene_1) + len(gene_2))
-        
-        genome_1 = genome.Genome.init_genome(10, 10)
-        genome_2 = genome.Genome.init_genome(10, 10)
-        for _ in range(15):
-            child_genome = evolution.Mating.mate_crossover(genome_1, genome_2)
-            self.assertIsNotNone(child_genome)
-            self.assertGreater(len(child_genome), 1)
-            self.assertLess(len(child_genome), len(genome_1) + len(genome_2))
         
 class MutationTest(unittest.TestCase):
     def testMutationClass(self):
@@ -160,3 +120,50 @@ class MutationTest(unittest.TestCase):
         self.assertTrue(len(mutated_dna) == len(dna))
         self.assertEqual(mutated_dna.shape[1], dna.shape[1])
         self.assertTrue(np.mean(dna == mutated_dna) == 1)
+
+class MatingTest(unittest.TestCase):
+    def testMatingClass(self):
+        self.assertIsNotNone(evolution.Mating)
+        self.assertIsNotNone(evolution.Mating.mate_crossover)
+        self.assertIsNotNone(evolution.Mating.mate_grafting)
+
+    def testGraftingGenes(self):
+        genome_1 = genome.Genome.init_genome(10)
+        genome_2 = genome.Genome.init_genome(10)
+        for _ in range(15):
+            child_genome = evolution.Mating.mate_grafting(genome_1, genome_2)
+            self.assertIsNotNone(child_genome)
+            self.assertGreater(len(child_genome), 1)
+            self.assertLess(len(child_genome), len(genome_1) + len(genome_2))
+            self.assertIsInstance(child_genome, np.ndarray)
+            self.assertEqual(len(child_genome.shape), 2)
+            self.assertEqual(child_genome.shape[1], genome_1.shape[1])
+
+    def testCrossoverGenes(self):
+        genome_1 = genome.Genome.init_genome(10)
+        genome_2 = genome.Genome.init_genome(10)
+        for _ in range(15):
+            child_genome = evolution.Mating.mate_crossover(genome_1, genome_2)
+            self.assertIsNotNone(child_genome)
+            self.assertGreater(len(child_genome), 1)
+            self.assertLess(len(child_genome), len(genome_1) + len(genome_2))
+            self.assertIsInstance(child_genome, np.ndarray)
+            self.assertEqual(len(child_genome.shape), 2)
+            self.assertEqual(child_genome.shape[1], genome_1.shape[1])
+
+    def testMatingCreatures(self):
+        genomes = [genome.Genome.init_genome(10) for _ in range(10)]
+        min_length = 2
+        max_length = 10
+        max_growth_rt = 1.5
+        mutation_freq = 0.15
+        mutation_amnt = 0.15
+
+        for _ in range(15):
+            p1, p2 = np.random.choice(10, size = 2)
+            child_genome = evolution.Mating.mate(genomes[p1], genomes[p2], min_length, max_length, max_growth_rt, mutation_freq, mutation_amnt)
+            self.assertIsInstance(child_genome, np.ndarray)
+            self.assertEqual(len(child_genome.shape), 2)
+            self.assertEqual(child_genome.shape[1], genomes[0].shape[1])
+            self.assertGreaterEqual(child_genome.shape[0], min_length)
+            self.assertLessEqual(child_genome.shape[0], max_length)

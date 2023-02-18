@@ -20,6 +20,7 @@ class Selection:
     @staticmethod
     def select_parents(creatures:list[creature.Creature], fits:np.ndarray):
         probs = fits / np.sum(fits)
+        probs = np.nan_to_num(probs, nan = 0)
         if np.mean(probs == 0.0) == 1 or np.sum(probs == 1.) == 1:
             probs = np.ones(len(fits)) / len(fits)
         ind_parent1, ind_parent2 = np.random.choice(range(len(fits)), 2, False, probs)
@@ -27,14 +28,14 @@ class Selection:
 
 class Mutation:
     @staticmethod
-    def mutate_point(dna:np.ndarray, mutation_freq:float, mutation_amt: float = 0.1):
+    def mutate_point(dna:np.ndarray, mutation_freq:float, mutation_amnt: float = 0.1):
         mutated_dna = copy.copy(dna)
         mutated = np.random.choice((True, False), size = mutated_dna.shape, replace = True, p = (mutation_freq, 1-mutation_freq))
         mutated_dna[mutated] = np.maximum(
             0.0001 + np.random.random() / 1000,
             np.minimum(
                 0.9999 - np.random.random() / 1000,
-                mutated_dna[mutated] + (np.random.random() * mutation_amt) - (mutation_amt / 2)
+                mutated_dna[mutated] + (np.random.random() * mutation_amnt) - (mutation_amnt / 2)
             )
         )
         return mutated_dna
@@ -71,3 +72,28 @@ class Mating:
         indices2 = np.sort(np.random.choice(range(len(dna2)), 2, replace = False))
         child_dna = np.concatenate((dna1[indices1[0]:], dna2[indices2[0]:indices2[1]], dna1[:indices1[1]]))
         return child_dna[:length_limit]
+    
+    @staticmethod
+    def mate(dna1:np.ndarray, 
+             dna2:np.ndarray,
+             min_length:int,
+             max_length:int,
+             max_growth_rt:float,
+             mutation_freq:float,
+             mutation_amnt:float):
+        # select the mating method
+        if np.random.random() < 0.5:
+            child_dna = Mating.mate_grafting(dna1, dna2, max_length, max_growth_rt)
+        else:
+            child_dna = Mating.mate_crossover(dna1, dna2, max_length, max_growth_rt)
+
+        # select the order of growth-shrink mutation        
+        if np.random.random() < 0.5:
+            child_dna = Mutation.mutate_grow(child_dna, mutation_freq, max_length)
+            child_dna = Mutation.mutate_shrink(child_dna, mutation_freq, min_length)
+        else:
+            child_dna = Mutation.mutate_shrink(child_dna, mutation_freq, min_length)
+            child_dna = Mutation.mutate_grow(child_dna, mutation_freq, max_length)
+           
+        child_dna = Mutation.mutate_point(child_dna, mutation_freq, mutation_amnt)
+        return child_dna
