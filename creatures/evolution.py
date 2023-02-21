@@ -9,6 +9,9 @@ class Selection:
         finish_points = np.array([cr.last_position for cr in creatures])
         n_exp_links = np.array([len(cr.get_expanded_links()) for cr in creatures])
         fits = np.linalg.norm(finish_points - start_points, axis = 1)
+        # handling condition of all invalid creatures or only one successful creature 
+        if np.mean(fits == 0.0) == 1 or np.sum(fits != 0.) == 1:
+            fits = np.ones(len(fits)) / len(fits)
         # add reward if taking more x direction
         fits = fits * (1 + (finish_points[:, 0] - start_points[:, 0]) / np.max(fits))
         # add penalty if having less body parts
@@ -21,8 +24,6 @@ class Selection:
     def select_parents(creatures:list[creature.Creature], fits:np.ndarray):
         probs = fits / np.sum(fits)
         probs = np.nan_to_num(probs, nan = 0)
-        if np.mean(probs == 0.0) == 1 or np.sum(probs == 1.) == 1:
-            probs = np.ones(len(fits)) / len(fits)
         ind_parent1, ind_parent2 = np.random.choice(range(len(fits)), 2, False, probs)
         return creatures[ind_parent1], creatures[ind_parent2]
 
@@ -86,14 +87,8 @@ class Mating:
             child_dna = Mating.mate_grafting(dna1, dna2, max_length, max_growth_rt)
         else:
             child_dna = Mating.mate_crossover(dna1, dna2, max_length, max_growth_rt)
-
-        # select the order of growth-shrink mutation        
-        if np.random.random() < 0.5:
-            child_dna = Mutation.mutate_grow(child_dna, mutation_freq, max_length)
-            child_dna = Mutation.mutate_shrink(child_dna, mutation_freq, min_length)
-        else:
-            child_dna = Mutation.mutate_shrink(child_dna, mutation_freq, min_length)
-            child_dna = Mutation.mutate_grow(child_dna, mutation_freq, max_length)
-           
+            
+        child_dna = Mutation.mutate_shrink(child_dna, mutation_freq, min_length)
+        child_dna = Mutation.mutate_grow(child_dna, mutation_freq, max_length)
         child_dna = Mutation.mutate_point(child_dna, mutation_freq, mutation_amnt)
         return child_dna
