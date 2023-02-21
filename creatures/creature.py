@@ -35,7 +35,6 @@ class Creature:
         self.motors = None
         self.__flat_links = None
         self.__expanded_links = None
-        self.get_motors()
 
     def reset_start_position(self, start_position):
         self.start_position = start_position
