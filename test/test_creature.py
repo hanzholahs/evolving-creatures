@@ -1,5 +1,5 @@
-import unittest
 import os
+import unittest
 from creatures import creature, genome
 from xml.dom.minidom import Element
 
@@ -99,6 +99,7 @@ class CreatureXMLTest(unittest.TestCase):
             f_str= f.read()
 
         self.assertEqual(f_str, cr.get_xml().toprettyxml())
+        os.remove(file_path)
 
 class CreatureMoveTest(unittest.TestCase):
     def testMovingDistance(self):
