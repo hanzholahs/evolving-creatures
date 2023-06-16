@@ -1,5 +1,6 @@
 import os
 import re
+import copy
 import numpy as np
 from creatures import creature, evolution
 
@@ -68,13 +69,14 @@ class Population:
 
         new_creatures = []
         for index in fittest_indices:
-            fittest_cr = self.creatures[index]
-            new_creatures.append(fittest_cr)
+            new_cr = creature.Creature(self.default_gene_count)
+            new_cr.update_dna(self.creatures[index].dna.copy())
+            new_creatures.append(new_cr)
         for _ in range(self.population_size - num_of_elites - num_of_random):
             fits = evolution.Selection.eval_fitness(self.creatures)
             p1, p2 = evolution.Selection.select_parents(self.creatures, fits)
-            child_cr = creature.Creature(1)
-            child_cr.update_dna(evolution.Mating.mate(
+            new_cr = creature.Creature(1)
+            new_cr.update_dna(evolution.Mating.mate(
                 p1.dna,
                 p2.dna,
                 min_length,
@@ -83,10 +85,10 @@ class Population:
                 mutation_freq,
                 mutation_amnt
             ))
-            new_creatures.append(child_cr)
+            new_creatures.append(new_cr)
         for _ in range(num_of_random):
-            random_cr = creature.Creature(self.default_gene_count)
-            new_creatures.append(random_cr)
+            new_cr = creature.Creature(self.default_gene_count)
+            new_creatures.append(new_cr)
 
         self.reset_population(new_creatures)
 
