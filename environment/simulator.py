@@ -8,11 +8,9 @@ class Simulator:
         self.client_id = p.connect(p.DIRECT)
         self.sim_id = sim_id
 
-    def run_creature(self, cr:creature.Creature, filename:str = "robot.urdf", max_frame:int = 2400):
-        if not os.path.exists(".tmp/urdf"):
-            os.makedirs(".tmp/urdf")
+    def run_creature(self, cr:creature.Creature, filename:str = "robot.urdf", max_frame:int = 2400, dirname = ".urdf/"):
 
-        cr_xml_path = ".tmp/urdf/sim_" + str(self.sim_id) + "_" + filename
+        cr_xml_path = f"{dirname}/sim_" + str(self.sim_id) + "_" + filename
         cr.write_xml(cr_xml_path)
 
         client_id = self.client_id
@@ -25,7 +23,7 @@ class Simulator:
         plane = p.createMultiBody(plane_shape, plane_shape, physicsClientId = client_id)
         robot = p.loadURDF(cr_xml_path, physicsClientId = client_id)
 
-        p.resetBasePositionAndOrientation(robot, (0, 0, 3), (0, 0, 0, 1), physicsClientId = client_id)
+        p.resetBasePositionAndOrientation(robot, (0, 0, 2.5), (0, 0, 0, 1), physicsClientId = client_id)
 
         for i in range(max_frame):
             if i % 240 == 0:
@@ -58,23 +56,29 @@ class Simulator:
 
         cr.update_position(last_position)
 
-    def eval_population(self, pop:population.Population, max_frame:int = 2400):
+    def eval_population(self, pop:population.Population, max_frame:int = 2400, dirname = ".urdf/"):
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         for cr in pop.creatures:
-            self.run_creature(cr, max_frame = max_frame)
+            self.run_creature(cr, max_frame = max_frame, dirname = dirname)
         
 class MultiSimulator():
     def __init__(self, pool_size:int = 5):
         self.sims = [Simulator(i) for i in range(pool_size)]
 
-    def eval_population(self, pop:population.Population, max_frame:int = 2400):
+    def eval_population(self, pop:population.Population, max_frame:int = 2400, dirname = ".urdf/"):
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         sim_id = 0
         pool_size = len(self.sims)
         population_size = len(pop.creatures)
         pool_argset = []
         new_creatures = []
 
+        # print(f"iterating for {population_size} creatures with pool size of {pool_size}")
         for i, cr in enumerate(pop.creatures):
-            pool_argset.append([self.sims[sim_id], cr, max_frame])
+            # print(sim_id, end=" ")
+            pool_argset.append([self.sims[sim_id], cr, max_frame, dirname])
             sim_id += 1
             if sim_id >= pool_size or (i + 1) == population_size:
                 with Pool(pool_size) as pool:
@@ -83,10 +87,11 @@ class MultiSimulator():
                 pool.close()
                 pool_argset = []
                 sim_id = 0
+                # print()
 
         pop.reset_population(new_creatures)
 
     @staticmethod
-    def static_run_creature(sim:Simulator, cr:creature.Creature, max_frame:int = 2400):
-        sim.run_creature(cr, max_frame = max_frame)
+    def static_run_creature(sim:Simulator, cr:creature.Creature, max_frame:int = 2400, dirname = ".urdf/"):
+        sim.run_creature(cr, max_frame = max_frame, dirname = dirname)
         return cr
