@@ -12,8 +12,8 @@ class Selection:
         # handling condition of all invalid creatures or only one successful creature 
         if np.mean(fits == 0.0) == 1 or np.sum(fits != 0.) == 1:
             fits = np.ones(len(fits)) / len(fits)
-        # add reward if taking more x direction
-        fits = fits * (1 + (finish_points[:, 0] - start_points[:, 0]) / np.max(fits))
+        # add reward if based on the x positive direction
+        fits = fits * np.maximum(0, (1 + (finish_points[:, 0] - start_points[:, 0]) / np.max(fits)))
         # add penalty if having less body parts
         fits = fits / (1 + n_exp_links / np.max(n_exp_links))
         # remove NaN, if any
