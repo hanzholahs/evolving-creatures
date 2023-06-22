@@ -4,7 +4,7 @@ import shutil
 import unittest
 import numpy as np
 from creatures import population
-from environment import simulator
+from app import simulator
 
 # Base directories
 BASE_DIR = ".tmp/test_execution"        

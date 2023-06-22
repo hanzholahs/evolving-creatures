@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from environment import simulator
+from app import simulator
 from creatures import creature, population
 
 class SimulatorTest(unittest.TestCase):
