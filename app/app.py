@@ -44,6 +44,7 @@ class MainApp:
         # instantiate pop and sim
         self.reset_population()
         self.save_population()
+        self.generate_report()
         self.build_simulator()
         
     def build_simulator(self, 
@@ -94,8 +95,10 @@ class MainApp:
         
     def run(self,
             base_dir:str = None,
-            save_population:bool = False,
+            save_after:bool = True,
             save_each:int = None,
+            report_after:bool = True,
+            report_each:int = None,
             num_of_generation:int = None,
             num_of_elites:int = None,
             num_of_random:int = None,
@@ -144,12 +147,18 @@ class MainApp:
             self.current_generation += 1
             if save_each is not None and i % save_each == 0:
                 self.save_population()
+            if report_each is not None and i % report_each == 0:
+                self.generate_report()
                 
         self.sim.eval_population(self.pop)
         self.current_generation += 1
         
+        # generate report after simulation
+        if report_after:
+            self.generate_report()
+            
         # save csvs after simulation
-        if save_population:
+        if save_after:
             self.save_population()
         
     def save_population(self, base_dir = None) -> None:
@@ -174,3 +183,11 @@ class MainApp:
         load_path = os.path.join(self.base_dir, "pop", str(self.current_generation))
         
         self.pop.from_csvs(base_folder = load_path, identifier = "cr")
+        
+    def generate_report(self, base_dir = None) -> None:
+        if base_dir is not None:
+            self.base_dir = base_dir
+        
+        report_path = os.path.join(self.base_dir, "report", str(self.current_generation))
+        
+        self.pop.generate_report(self.current_generation, report_path)
