@@ -14,6 +14,10 @@ class Population:
         self.min_dist = 0
         self.avg_dist = 0
         self.reset_population()
+        self.expanded_links_max_length()
+        
+    def expanded_links_max_length(self):
+        self.max_expanded_length = max(len(cr.get_expanded_links()) for cr in self.creatures)
 
     def reset_population(self, creatures:list[creature.Creature] = None):
         if creatures == None:
@@ -25,14 +29,17 @@ class Population:
                 del old_creature
             self.creatures = creatures
             self.population_size = len(self.creatures)
+        self.expanded_links_max_length()
 
     def add_creature(self, cr:creature.Creature):
         self.creatures.append(cr)
         self.population_size = len(self.creatures)
+        self.expanded_links_max_length()
 
     def add_creatures(self, creatures:list[creature.Creature]):
         self.creatures.extend(creatures)
         self.population_size = len(self.creatures)
+        self.expanded_links_max_length()
 
     def new_generation(self,
                        num_of_elites:int,
@@ -89,6 +96,9 @@ class Population:
         for _ in range(num_of_random):
             new_cr = creature.Creature(self.default_gene_count)
             new_creatures.append(new_cr)
+        for cr in self.creatures:
+            while len(cr.get_expanded_links()) > self.max_expanded_length * (max_growth_rt):
+                cr.update_dna(creature.Creature(self.default_gene_count).dna)
 
         self.reset_population(new_creatures)
 
