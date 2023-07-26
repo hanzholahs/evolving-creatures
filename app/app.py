@@ -1,6 +1,13 @@
 import os
+import datetime
+import numpy as np
+
 from app import simulator
 from creatures import population
+from creatures.evolution import Selection
+
+eval_fitness = Selection.eval_fitness 
+now = datetime.datetime.now
 
 class MainApp:
     def __init__(self,
@@ -99,6 +106,8 @@ class MainApp:
             save_each:int = None,
             report_after:bool = True,
             report_each:int = None,
+            print_log:bool = True,
+            print_log_console:bool = True,
             num_of_generation:int = None,
             num_of_elites:int = None,
             num_of_random:int = None,
@@ -132,8 +141,12 @@ class MainApp:
             self.dist_limit_rt = dist_limit_rt
         
         # run simulation for some generations
-        for i in range(self.num_of_generation - 1):
+        for i in range(self.num_of_generation):
             self.sim.eval_population(self.pop, self.max_frame)
+            
+            if print_log:
+                self.__print_log(print_log_console)
+
             self.pop.new_generation(
                 self.num_of_elites,
                 self.num_of_random,
@@ -144,7 +157,9 @@ class MainApp:
                 self.mutation_amnt,
                 self.dist_limit_rt
             )
+            
             self.current_generation += 1
+                        
             if save_each is not None and i % save_each == 0:
                 self.save_population()
             if report_each is not None and i % report_each == 0:
@@ -152,7 +167,7 @@ class MainApp:
                 
         self.sim.eval_population(self.pop)
         self.current_generation += 1
-        
+            
         # generate report after simulation
         if report_after:
             self.generate_report()
@@ -191,3 +206,29 @@ class MainApp:
         report_path = os.path.join(self.base_dir, "report", str(self.current_generation))
         
         self.pop.generate_report(self.current_generation, report_path)
+        
+    def __print_log(self, print_log_console = False):
+        log_path = os.path.join(self.base_dir, "log.txt")
+        
+        n_ex_link = np.mean([len(cr.get_expanded_links()) for cr in self.pop.creatures])
+        n_fl_link = np.mean([len(cr.get_flat_links()) for cr in self.pop.creatures])
+        max_ex_link = max([len(cr.get_expanded_links()) for cr in self.pop.creatures])
+        max_fl_link = max([len(cr.get_flat_links()) for cr in self.pop.creatures])
+        dists = np.mean([cr.get_distance() for cr in self.pop.creatures])
+        fits  = np.mean(eval_fitness(self.pop.creatures))
+                
+        text = "".join([
+            f"{now()},",
+            f"{str(self.current_generation)},".rjust(10, " "),
+            f"{round(n_ex_link, 2):.2f},".rjust(10, " "),
+            f"{round(n_fl_link, 2):.2f},".rjust(10, " "),
+            f"{round(max_ex_link, 2):.2f},".rjust(10, " "),
+            f"{round(max_fl_link, 2):.2f},".rjust(10, " "),
+            f"{round(dists, 2):.2f},".rjust(10, " "),
+            f"{round(fits, 2):.2f},".rjust(10, " ")
+        ])
+        
+        if print_log_console: print(text)
+        
+        with open(log_path, "a") as f:
+            f.write(text + "\n")
