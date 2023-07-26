@@ -225,7 +225,7 @@ class MainApp:
             f"{round(max_ex_link, 2):.2f},".rjust(10, " "),
             f"{round(max_fl_link, 2):.2f},".rjust(10, " "),
             f"{round(dists, 2):.2f},".rjust(10, " "),
-            f"{round(fits, 2):.2f},".rjust(10, " ")
+            f"{round(fits, 2):.2f}".rjust(10, " ")
         ])
         
         if print_log_console: print(text)
