@@ -1,6 +1,6 @@
 import os
 import re
-import copy
+import random
 import numpy as np
 from creatures import creature, evolution
 
@@ -94,7 +94,8 @@ class Population:
             ))
             new_creatures.append(new_cr)
         for _ in range(num_of_random):
-            new_cr = creature.Creature(self.default_gene_count)
+            new_cr = creature.Creature(1)
+            new_cr.update_dna(random.choice(self.creatures).dna)
             new_creatures.append(new_cr)
         for cr in self.creatures:
             while len(cr.get_expanded_links()) > self.max_expanded_length * (max_growth_rt):
