@@ -151,15 +151,15 @@ class MainApp:
             cr.reset_motors()
             
         # run simulation for some generations
-        for i in range(self.num_of_generation):
+        while self.current_generation <= self.num_of_generation:
             self.sim.eval_population(self.pop, self.max_frame)
             
-            if save_each is not None and i % save_each == 0:
+            if save_each is not None and self.current_generation % save_each == 0:
                 self.save_population()
-            if report_each is not None and i % report_each == 0:
+            if report_each is not None and self.current_generation % report_each == 0:
                 self.generate_report()
-            if log_each is not None and i % log_each == 0:
-                self.__print_log(log_console)
+            if log_each is not None and self.current_generation % log_each == 0:
+                self.print_log(log_console)
 
             self.current_generation += 1
             self.pop.new_generation(
@@ -176,10 +176,10 @@ class MainApp:
         self.sim.eval_population(self.pop, self.max_frame)
             
         if log_after:
-            self.__print_log(log_console)
+            self.print_log(log_console)
 
         # generate report after simulation
-        if report_after:
+        if report_after: 
             self.generate_report()
             
         # save csvs after simulation
@@ -217,7 +217,7 @@ class MainApp:
         
         self.pop.generate_report(self.current_generation, report_path)
         
-    def __print_log(self, log_console = False):
+    def print_log(self, log_console = False):
         log_path = os.path.join(self.base_dir, "log.txt")
         
         n_ex_link = np.mean([len(cr.get_expanded_links()) for cr in self.pop.creatures])
