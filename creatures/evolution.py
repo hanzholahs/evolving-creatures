@@ -2,9 +2,15 @@ import copy
 import numpy as np
 from creatures import creature
 
+def normalize(data):
+    return (data - np.min(data)) / (np.max(data) - np.min(data))
+
+def relu(data):
+    return np.maximum(0, data)
+
 class Selection:
     @staticmethod
-    def eval_fitness(creatures:list[creature.Creature]):
+    def eval_fitness(creatures:list[creature.Creature], gamma = 0.25):
         start_points = np.array([cr.start_position for cr in creatures])
         finish_points = np.array([cr.last_position for cr in creatures])
         n_exp_links = np.array([len(cr.get_expanded_links()) for cr in creatures])
@@ -13,9 +19,9 @@ class Selection:
         if np.mean(fits == 0.0) == 1 or np.sum(fits != 0.) == 1:
             fits = np.ones(len(fits)) / len(fits)
         # add reward if based on the x positive direction
-        fits = fits * np.maximum(0, (1 + (finish_points[:, 0] - start_points[:, 0]) / np.max(fits)))
+        fits = fits * (1 + gamma * normalize(relu(finish_points[:, 0] - start_points[:, 0])) - 0.5 * gamma)
         # add penalty if having less body parts
-        fits = fits / (1 + n_exp_links / np.max(n_exp_links))
+        fits = fits / (1 + gamma * normalize(n_exp_links) - 0.5 * gamma)
         # remove NaN, if any
         fits = np.nan_to_num(fits, nan = 0)
         return fits
