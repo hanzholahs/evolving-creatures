@@ -76,6 +76,9 @@ class Creature:
         with open(path, "w") as f:
             xml_str = self.get_xml().toprettyxml()
             f.write(xml_str)
+            
+    def reset_motors(self):
+        self.motors = None
     
     def get_motors(self):
         if self.motors == None:
