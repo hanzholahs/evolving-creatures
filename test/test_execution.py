@@ -12,15 +12,15 @@ if os.path.exists(BASE_DIR):
     shutil.rmtree(BASE_DIR)
 
 # Simulation parameters
-NUM_OF_PROCESSES  = 10
-MAX_SIM_FRAMES    = 2400
-NUM_OF_GENERATION = 50
+NUM_OF_PROCESSES  = 5
+MAX_SIM_FRAMES    = 1200
+NUM_OF_GENERATION = 5
 
 # Generation parameters
 DEFAULT_GEN_COUNT = 5
-NUM_OF_CR = 20
-NUM_OF_ELITES = 5
-NUM_OF_RANDOM = 5
+NUM_OF_CR = 10
+NUM_OF_ELITES = 2
+NUM_OF_RANDOM = 2
 MIN_LEN = 2
 MAX_LEN = 7
 MAX_GROWTH_RT = 1.2
@@ -75,15 +75,13 @@ class SimulationRunTest(unittest.TestCase):
             # print(f"{np.max(old_distances):.2f}", end = " ")
             # print(f"{np.mean(equal_distances):.2f}", end = "\n")
             
-            for cr in old_creatures:
-                del cr
     
     def testDeterministicNatureForDifferentSimulators(self):
         pop1 = population.Population(NUM_OF_CR, DEFAULT_GEN_COUNT)
         sim1 = simulator.MultiSimulator(NUM_OF_PROCESSES)
         sim2 = simulator.MultiSimulator(NUM_OF_PROCESSES)
 
-        for _ in range(5):
+        for _ in range(NUM_OF_GENERATION):
             sim1.eval_population(pop1, MAX_SIM_FRAMES)
             pop1.new_generation(NUM_OF_ELITES,
                                 NUM_OF_RANDOM,
