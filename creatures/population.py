@@ -1,5 +1,6 @@
 import os
 import re
+import copy
 import random
 import numpy as np
 from creatures import creature, evolution
@@ -18,6 +19,9 @@ class Population:
         
     def expanded_links_max_length(self):
         self.max_expanded_length = max(len(cr.get_expanded_links()) for cr in self.creatures)
+        
+    def flat_links_max_length(self):
+        self.max_flat_length = max(len(cr.get_expanded_links()) for cr in self.creatures)
 
     def reset_population(self, creatures:list[creature.Creature] = None):
         if creatures == None:
@@ -42,13 +46,13 @@ class Population:
         self.expanded_links_max_length()
 
     def new_generation(self,
-                       num_of_elites:int,
-                       num_of_random:int,
-                       min_length:int,
-                       max_length:int,
-                       max_growth_rt:float,
-                       mutation_freq:float,
-                       mutation_amnt:float,
+                       num_of_elites:int = 0,
+                       num_of_random:int = 0,
+                       min_length:int = 2,
+                       max_length:int = 5,
+                       mutation_freq:float = 0.1,
+                       mutation_amnt:float = 0.1,
+                       max_growth_rt:float = 1.025,
                        dist_limit_rt:float = 1.025):
         assert num_of_elites < self.population_size
         assert num_of_random < self.population_size
@@ -57,6 +61,9 @@ class Population:
         assert 0 <= max_growth_rt
         assert 0 <= mutation_freq and mutation_freq <= 1
         assert 0 <= mutation_amnt and mutation_amnt <= 1
+        
+        # upper limit for extended links
+        max_expanded_length = self.max_expanded_length * (max_growth_rt)
 
         # eliminate cheating creatures manually by incremental fit increase
         for cr in self.creatures:
@@ -75,31 +82,31 @@ class Population:
         fittest_indices = np.array(fits).argsort()[-1:-(num_of_elites+1):-1]
 
         new_creatures = []
-        for index in fittest_indices:
-            new_cr = creature.Creature(self.default_gene_count)
-            new_cr.update_dna(self.creatures[index].dna.copy())
-            new_creatures.append(new_cr)
         for _ in range(self.population_size - num_of_elites - num_of_random):
             fits = evolution.Selection.eval_fitness(self.creatures)
             p1, p2 = evolution.Selection.select_parents(self.creatures, fits)
             new_cr = creature.Creature(1)
-            new_cr.update_dna(evolution.Mating.mate(
-                p1.dna,
-                p2.dna,
-                min_length,
-                max_length,
-                max_growth_rt,
-                mutation_freq,
-                mutation_amnt
-            ))
+            while len(new_cr.get_expanded_links()) > max_expanded_length:
+                new_cr.update_dna(evolution.Mating.mate(
+                    p1.dna,
+                    min_length,
+                    max_length,
+                    max_growth_rt,
+                    mutation_freq,
+                    mutation_amnt
+                ))
+            new_creatures.append(new_cr)
+        for index in fittest_indices:
+            # new_cr = creature.Creature(self.default_gene_count)
+            # new_cr.update_dna(self.creatures[index].dna.copy())
+            new_cr = copy.copy(self.creatures[index])
             new_creatures.append(new_cr)
         for _ in range(num_of_random):
             new_cr = creature.Creature(1)
-            new_cr.update_dna(random.choice(self.creatures).dna)
+            while len(new_cr.get_expanded_links()) > max_expanded_length:
+                new_cr.update_dna(random.choice(self.creatures).dna)
+            new_cr = copy.copy(random.choice(self.creatures))
             new_creatures.append(new_cr)
-        for cr in self.creatures:
-            while len(cr.get_expanded_links()) > self.max_expanded_length * (max_growth_rt):
-                cr.update_dna(creature.Creature(self.default_gene_count).dna)
 
         self.reset_population(new_creatures)
 
