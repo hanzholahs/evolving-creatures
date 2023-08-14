@@ -147,6 +147,9 @@ class MainApp:
         if dist_limit_rt is not None:
             self.dist_limit_rt = dist_limit_rt
             
+        self.print_setting(save_after, save_each, report_after, report_each, \
+                           log_after, log_each, log_console)
+            
         for cr in self.pop.creatures:
             cr.reset_motors()
             
@@ -176,7 +179,7 @@ class MainApp:
         self.sim.eval_population(self.pop, self.max_frame)
             
         if log_after:
-            self.print_log(log_console)
+            self.print_log(log_console = True)
 
         # generate report after simulation
         if report_after: 
@@ -241,4 +244,43 @@ class MainApp:
         if log_console: print(text)
         
         with open(log_path, "a") as f:
+            f.write(text + "\n")
+            
+    def print_setting(self,
+                      save_after,
+                      save_each,
+                      report_after,
+                      report_each,
+                      log_after,
+                      log_each,
+                      log_console):
+        setting_path = os.path.join(self.base_dir, "settings.txt")
+        
+        text = "\n".join([
+            f"Multiprocess: {self.multiprocess}",
+            f"Pool Size: {self.pool_size}",
+            f"Max Frame: {self.max_frame}",
+            f"Directory: {self.base_dir}",
+            f"Save After: {save_after}",
+            f"Save Each: {save_each}",
+            f"Report After: {report_after}",
+            f"Report Each: {report_each}",
+            f"Log After: {log_after}",
+            f"Log Each: {log_each}",
+            f"Log Console: {log_console}",
+            f"Population Size: {self.population_size}",
+            f"Starting Generation: {self.current_generation}",
+            f"Total Generation: {self.num_of_generation}",
+            f"Default Gene Count: {self.default_gene_count}",
+            f"Number of Elites: {self.num_of_elites}",
+            f"Number of Random: {self.num_of_random}",
+            f"Min Length: {self.min_length}",
+            f"Max Length: {self.max_length}",
+            f"Max Growth Rate: {self.max_growth_rt}",
+            f"Distance Limit Rate: {self.dist_limit_rt}",
+            f"Mutation Frequency: {self.mutation_freq}",
+            f"Mutation Amount: {self.mutation_amnt}",
+        ])
+        
+        with open(setting_path, "a") as f:
             f.write(text + "\n")
