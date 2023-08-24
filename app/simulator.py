@@ -12,6 +12,7 @@ class Simulator:
 
         cr_xml_path = f"{dirname}/sim_" + str(self.sim_id) + "_" + filename
         cr.write_xml(cr_xml_path)
+        # if cr.get_distance() is not 0: return
 
         client_id = self.client_id
 
