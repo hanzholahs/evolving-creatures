@@ -20,7 +20,7 @@ class Creature:
     __counter = 0
 
     def __init__(self, gene_count):
-        self.dna = genome.Genome.init_genome(gene_count, len(genome.Genome.get_spec()))
+        self.dna = genome.Genome.init_genome(gene_count)
         self.start_position = (0, 0, 0)
         self.last_position = (0, 0, 0)
         self.motors = None
@@ -102,22 +102,23 @@ class Creature:
             if i == 0:
                 parent_name, recur = "None", 1
             else:
-                parent_name, recur = link_names[i-1], int(np.ceil(gene_dict["link_recurrence"]))
+                parent_index = int(np.floor(gene_dict["parent_link"] * (i-1)))
+                parent_name = link_names[parent_index]
+                recur = int(np.ceil(gene_dict["link_recurrence"]))
             flat_links.append(CreatureLink(link_names[i], gene_dict, parent_name, recur))
         return flat_links
     
     @staticmethod
-    def expand_links(flat_links):       
-        flat_links[0].recur == 1 
+    def expand_links(flat_links):
         assert flat_links[0].recur == 1
-        exp_links = Creature.__expand_links_recursive(flat_links[0], flat_links[1:])
+        exp_links = Creature.__expand_links(flat_links)
         Creature.__counter = 0
         return exp_links
 
     @staticmethod
     def __expand_links_recursive(parent, child_links, child_id = "0"):
         p_copy = copy.copy(parent)
-        p_copy.name += ("_" + str(child_id) + "_" + str(Creature.__counter))
+        p_copy.name += ("_" + str(child_id) + "__ID_" + str(Creature.__counter))
         Creature.__counter += 1
         exp_links = [p_copy]
         if len(child_links) > 0:
@@ -126,4 +127,30 @@ class Creature:
                 c_copy = copy.copy(child)
                 c_copy[0].parent_name = p_copy.name
                 exp_links.extend(c_copy)
+        return exp_links
+    
+    @staticmethod
+    def __expand_links(flat_links):
+        exp_links = []
+        counter = 0
+        
+        for i in range(len(flat_links)):
+            if i == 0:
+                child = copy.copy(flat_links[i])
+                child.name += "__ID_" + str(counter)
+                exp_links.append(child)
+                counter += 1
+                continue
+            
+            parent_name = flat_links[i].parent_name
+            parents = [l for l in exp_links if l.name.startswith(parent_name)]
+
+            for parent in parents:
+                for j in range(flat_links[i].recur):
+                    child = copy.copy(flat_links[i])
+                    child.name += "_" + str(j) + "__ID_" + str(counter)
+                    child.parent_name = parent.name
+                    exp_links.append(child)
+                    counter += 1
+    
         return exp_links

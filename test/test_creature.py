@@ -5,36 +5,44 @@ from xml.dom.minidom import Element
 
 class CreatureLinksTest(unittest.TestCase):
          
-    def testCreatureGenomeToLinks(self):
-        self.assertIsNotNone(creature.Creature.genome_to_links)
-
-        dna = genome.Genome.init_genome(5)
-        g_dicts = genome.Genome.to_dict(dna)
-
-        links = creature.Creature.genome_to_links(g_dicts)
-        self.assertIsNotNone(links)
-        self.assertEqual(len(links), len(g_dicts))
-        self.assertEqual(type(links[0]), creature.CreatureLink)
-        self.assertEqual(links[0].parent_name, "None")
-        self.assertEqual(links[0].recur, 1)
-        self.assertEqual(links[0].name, links[1].parent_name)
-        self.assertEqual(links[-2].name, links[-1].parent_name)
-
     def testCreatureFlatLinks(self):
+        self.assertIsNotNone(creature.Creature.genome_to_links)
         self.assertIsNotNone(creature.Creature.get_flat_links)
 
         cr = creature.Creature(5)
         self.assertIsNotNone(cr)
         
         flat_links = cr.get_flat_links()
+        link_names = [link.name for link in flat_links]
         self.assertEqual(len(flat_links), 5)
         self.assertEqual(type(flat_links[0]), creature.CreatureLink)
         self.assertEqual(flat_links[0].parent_name, "None")
         self.assertEqual(flat_links[0].recur, 1)
-        self.assertEqual(flat_links[0].name, flat_links[1].parent_name)
-        self.assertEqual(flat_links[-2].name, flat_links[-1].parent_name)
+        self.assertIn(flat_links[0].name, link_names)
+        self.assertIn(flat_links[-2].name, link_names)
         
     def testCreatureExpandedLinks(self):
+        cr = creature.Creature(5)
+        
+        flat_links = [
+            creature.CreatureLink("Link_0", None, "None", 1),
+            creature.CreatureLink("Link_1", None, "Link_0", 3),
+            creature.CreatureLink("Link_2", None, "Link_0", 1),
+            creature.CreatureLink("Link_3", None, "Link_1", 1),
+            creature.CreatureLink("Link_4", None, "Link_1", 2),
+        ]
+        
+        # flat_links = cr.get_flat_links()
+        exp_links = cr.expand_links(flat_links)
+        self.assertEqual(len(exp_links), 14)
+        self.assertEqual(exp_links[0].parent_name, "None")
+        self.assertEqual(exp_links[-1].parent_name, "Link_1_2__ID_3")
+        self.assertEqual(exp_links[5].parent_name, "Link_1_0__ID_1")
+        
+        for i, link in enumerate(exp_links):
+            self.assertTrue(link.name.endswith(str(i)))
+        
+    def testCreatureExpandedLinksExtensive(self):
         self.assertIsNotNone(creature.Creature.expand_links)
         self.assertIsNotNone(creature.Creature.get_expanded_links)
         
@@ -44,11 +52,18 @@ class CreatureLinksTest(unittest.TestCase):
             exp_links = creature.Creature.expand_links(flat_links)
 
             # manually count the number of links in expanded link list
-            link_count = 1
-            last_count = 1
-            for i in range(1, len(flat_links)):
-                last_count = last_count * flat_links[i].recur
-                link_count += last_count
+            parent_recur = 1
+            exp_links_count = 0
+            for link in flat_links:
+                if link.parent_name != "None":
+                    parents = [l for l in flat_links if l.name == link.parent_name]
+                    parent_recur = parents[0].recur
+                exp_links_count += link.recur * parent_recur
+            # link_count = 1
+            # last_count = 1
+            # for i in range(1, len(flat_links)):
+            #     last_count = last_count * flat_links[i].recur
+            #     link_count += last_count
 
             self.assertIsNotNone(exp_links)
             self.assertEqual(type(exp_links), list)
@@ -56,7 +71,7 @@ class CreatureLinksTest(unittest.TestCase):
             self.assertEqual(type(flat_links[-1]), creature.CreatureLink)
             self.assertEqual(type(exp_links[0]), creature.CreatureLink)
             self.assertEqual(type(exp_links[-1]), creature.CreatureLink)
-            self.assertEqual(link_count, len(exp_links))
+            self.assertEqual(exp_links_count, len(exp_links))
             self.assertGreaterEqual(len(exp_links), len(flat_links))
     
         for _ in range(10):
@@ -65,19 +80,21 @@ class CreatureLinksTest(unittest.TestCase):
             exp_links = cr.get_expanded_links()
 
             # manually count the number of links in expanded link list
-            link_count = 1
-            last_count = 1
-            for i in range(1, len(flat_links)):
-                last_count = last_count * flat_links[i].recur
-                link_count += last_count
-
+            parent_recur = 1
+            exp_links_count = 0
+            for link in flat_links:
+                if link.parent_name != "None":
+                    parents = [l for l in flat_links if l.name == link.parent_name]
+                    parent_recur = parents[0].recur
+                exp_links_count += link.recur * parent_recur
+                
             self.assertIsNotNone(exp_links)
             self.assertEqual(type(exp_links), list)
             self.assertEqual(type(flat_links[0]), creature.CreatureLink)
             self.assertEqual(type(flat_links[-1]), creature.CreatureLink)
             self.assertEqual(type(exp_links[0]), creature.CreatureLink)
             self.assertEqual(type(exp_links[-1]), creature.CreatureLink)
-            self.assertEqual(link_count, len(exp_links))
+            self.assertEqual(exp_links_count, len(exp_links))
             self.assertGreaterEqual(len(exp_links), len(flat_links))
 
 class CreatureXMLTest(unittest.TestCase):
