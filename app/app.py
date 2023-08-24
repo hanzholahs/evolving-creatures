@@ -59,7 +59,7 @@ class MainApp:
         self.sim.eval_population(self.pop, self.max_frame)
         self.generate_report()
         
-        if load_progress and os.path.exists(os.path.join(self.base_dir, "pop"))
+        if load_progress and os.path.exists(os.path.join(self.base_dir, "pop")):
             self.load_population()
         
     def build_simulator(self, 
