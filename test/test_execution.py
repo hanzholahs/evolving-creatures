@@ -23,9 +23,10 @@ NUM_OF_ELITES = 2
 NUM_OF_RANDOM = 2
 MIN_LEN = 2
 MAX_LEN = 7
-MAX_GROWTH_RT = 1.2
 MUTATION_FREQ = 0.15
 MUTATION_AMNT = 0.15
+MAX_GROWTH_RT = 1.2
+DIST_LIMIT_RT = 1.2
 
 class SimulationRunTest(unittest.TestCase):
     
@@ -39,9 +40,10 @@ class SimulationRunTest(unittest.TestCase):
                                NUM_OF_RANDOM,
                                MIN_LEN,
                                MAX_LEN,
-                               MAX_GROWTH_RT,
                                MUTATION_FREQ,
-                               MUTATION_AMNT)
+                               MUTATION_AMNT,
+                               MAX_GROWTH_RT,
+                               DIST_LIMIT_RT)
             sim.eval_population(pop, MAX_SIM_FRAMES)
             pop.to_csvs(f"{BASE_DIR}/data", "dna")
 
@@ -87,9 +89,10 @@ class SimulationRunTest(unittest.TestCase):
                                 NUM_OF_RANDOM,
                                 MIN_LEN,
                                 MAX_LEN,
-                                MAX_GROWTH_RT,
                                 MUTATION_FREQ,
-                                MUTATION_AMNT)
+                                MUTATION_AMNT,
+                                MAX_GROWTH_RT,
+                                DIST_LIMIT_RT)
 
         pop1.to_csvs(f"{BASE_DIR}/data", "dna")
 

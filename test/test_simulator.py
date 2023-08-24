@@ -48,3 +48,13 @@ class SimulatorTest(unittest.TestCase):
         sim.eval_population(pop)
         dists2 = np.array([cr.get_distance() for cr in pop.creatures])
         self.assertEqual(np.mean(0 <= dists2), 1)        
+
+    def testExtremeLengthPopulation(self):
+        pop_size = 15
+    
+        pop = population.Population(pop_size, 5)
+        sim = simulator.Simulator(5)
+        
+        for _ in range(10):
+            sim.eval_population(pop)
+            pop.new_generation()
