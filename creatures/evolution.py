@@ -1,8 +1,12 @@
 import copy
+import warnings
 import numpy as np
 from creatures import creature
 
 def normalize(data):
+    if (np.max(data) - np.min(data)) == 0:
+        # distribute proportional reward / penalty if all distances or link lengths are similar
+        return np.repeat(1 / len(data), len(data))
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 def relu(data):
@@ -15,15 +19,25 @@ class Selection:
         finish_points = np.array([cr.last_position for cr in creatures])
         n_exp_links = np.array([len(cr.get_expanded_links()) for cr in creatures])
         fits = np.linalg.norm(finish_points - start_points, axis = 1)
-        # handling condition of all invalid creatures or only one successful creature 
-        if np.mean(fits == 0.0) == 1 or np.sum(fits != 0.) == 1:
-            fits = np.ones(len(fits)) / len(fits)
-        # add reward if based on the x positive direction
-        fits = fits * (1 + gamma * normalize(relu(finish_points[:, 0] - start_points[:, 0])) - 0.5 * gamma)
-        # add penalty if having less body parts
-        fits = fits / (1 + gamma * normalize(n_exp_links) - 0.5 * gamma)
+        
         # remove NaN, if any
         fits = np.nan_to_num(fits, nan = 0)
+        
+        # handling condition of all invalid creatures or only one successful creature 
+        if np.mean(fits == 0.0) == 1:
+            warnings.warn("All runs are invalid.")
+            fits = np.ones(len(fits)) / len(fits)
+        if np.sum(fits != 0.) == 1:
+            warnings.warn("Only one run is successful.")
+            fits = np.ones(len(fits)) / len(fits)
+        
+        # reward if based on the x positive direction
+        reward = (1 + gamma * normalize(relu(finish_points[:, 0] - start_points[:, 0])) - 0.5 * gamma)
+        # penalty if having less body parts
+        penalty = (1 + gamma * normalize(n_exp_links) - 0.5 * gamma)
+        # impose reward and penalty
+        fits = fits * reward / penalty
+            
         return fits
 
     @staticmethod
@@ -65,20 +79,28 @@ class Mutation:
     
 class Mating:
     @staticmethod
-    def mate_grafting(dna1:np.ndarray, dna2:np.ndarray, max_length:int = 15, max_growth_rt:float = 1.2):
-        length_limit = np.minimum(max_length, int(np.maximum(len(dna1), len(dna2)) * max_growth_rt))
+    def mate_grafting(dna1:np.ndarray, dna2:np.ndarray, min_length:int = 2, max_length:int = 15, max_growth_rt:float = 1.2):
+        max_length = np.minimum(max_length, int(np.maximum(len(dna1), len(dna2)) * max_growth_rt))
         ind_1 = np.random.randint(1, len(dna1)+1)
         ind_2 = np.random.randint(0, len(dna2))
         child_dna = np.concatenate((dna1[:ind_1], dna2[ind_2:]))
-        return child_dna[:length_limit]
+        
+        if len(child_dna) >= min_length:
+            return child_dna[:max_length]
+        else:
+            return np.concatenate((dna1[:(min_length - len(child_dna))], child_dna))
 
     @staticmethod
-    def mate_crossover(dna1:np.ndarray, dna2:np.ndarray, max_length:int = 15, max_growth_rt = 1.2):
-        length_limit = np.minimum(max_length, int(np.maximum(len(dna1), len(dna2)) * max_growth_rt))
+    def mate_crossover(dna1:np.ndarray, dna2:np.ndarray, min_length:int = 2, max_length:int = 15, max_growth_rt = 1.2):
+        max_length = np.minimum(max_length, int(np.maximum(len(dna1), len(dna2)) * max_growth_rt))
         indices1 = np.sort(np.random.choice(range(len(dna1)), 2, replace = False))
         indices2 = np.sort(np.random.choice(range(len(dna2)), 2, replace = False))
-        child_dna = np.concatenate((dna1[indices1[0]:], dna2[indices2[0]:indices2[1]], dna1[:indices1[1]]))
-        return child_dna[:length_limit]
+        child_dna = np.concatenate((dna1[:indices1[0]], dna2[indices2[0]:indices2[1]], dna1[indices1[1]:]))
+        
+        if len(child_dna) >= min_length:
+            return child_dna[:max_length]
+        else:
+            return np.concatenate((dna1[:(min_length - len(child_dna))], child_dna))
     
     @staticmethod
     def mate(dna1:np.ndarray, 
@@ -90,9 +112,9 @@ class Mating:
              mutation_amnt:float):
         # select the mating method
         if np.random.random() < 0.5:
-            child_dna = Mating.mate_grafting(dna1, dna2, max_length, max_growth_rt)
+            child_dna = Mating.mate_grafting(dna1, dna2, min_length, max_length, max_growth_rt)
         else:
-            child_dna = Mating.mate_crossover(dna1, dna2, max_length, max_growth_rt)
+            child_dna = Mating.mate_crossover(dna1, dna2, min_length, max_length, max_growth_rt)
             
         child_dna = Mutation.mutate_shrink(child_dna, mutation_freq, min_length)
         child_dna = Mutation.mutate_grow(child_dna, mutation_freq, max_length)
