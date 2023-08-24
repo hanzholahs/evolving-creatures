@@ -68,7 +68,7 @@ class MutationTest(unittest.TestCase):
         self.assertIsNotNone(evolution.Mutation.mutate_grow)
     
     def testPointMutation(self):
-        dna = genome.Genome.init_genome(10, 25)
+        dna = genome.Genome.init_genome(10)
         rate = 0.25
         for _ in range(15):
             mutated_dna = evolution.Mutation.mutate_point(dna, mutation_freq = rate)
@@ -85,7 +85,7 @@ class MutationTest(unittest.TestCase):
         self.assertTrue(np.mean(dna != mutated_dna) > .95)
         
     def testShrinkMutation(self):
-        dna = genome.Genome.init_genome(25, 5)
+        dna = genome.Genome.init_genome(25)
         rate = 0.25
         for _ in range(15):
             mutated_dna = evolution.Mutation.mutate_shrink(dna, mutation_freq = rate)
@@ -102,7 +102,7 @@ class MutationTest(unittest.TestCase):
         self.assertTrue(np.mean(dna == mutated_dna) == 1)
                     
     def testGrowMutation(self):
-        dna = genome.Genome.init_genome(5, 5)
+        dna = genome.Genome.init_genome(5)
         rate = 0.25
         for _ in range(15):
             mutated_dna = evolution.Mutation.mutate_grow(dna, mutation_freq = rate)
