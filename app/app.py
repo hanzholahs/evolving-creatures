@@ -152,11 +152,8 @@ class MainApp:
         self.print_setting(save_after, save_each, report_after, report_each, \
                            log_after, log_each, log_console)
             
-        for cr in self.pop.creatures:
-            cr.reset_motors()
-            
         # run simulation for some generations
-        while self.current_generation <= self.num_of_generation:
+        while self.current_generation < self.num_of_generation:
             self.sim.eval_population(self.pop, self.max_frame)
             
             if save_each is not None and self.current_generation % save_each == 0:
@@ -172,9 +169,9 @@ class MainApp:
                 self.num_of_random,
                 self.min_length,
                 self.max_length,
-                self.max_growth_rt,
                 self.mutation_freq,
                 self.mutation_amnt,
+                self.max_growth_rt,
                 self.dist_limit_rt
             )
         

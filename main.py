@@ -1,27 +1,28 @@
 from app.app import MainApp
 
 # Simulation parameters
-BASE_DIR = ".sim"
+BASE_DIR = ".sim2"
 NUM_OF_PROCESSES = 10
 MAX_SIM_FRAMES   = 2400
-SAVE_EACH   = 100
+SAVE_EACH   = 5
 REPORT_EACH = 5
-LOG_EACH    = 1
+LOG_EACH    = 25
 
 # Generation parameters
-NUM_OF_GENERATION = 500
+NUM_OF_GENERATION = 1_000
 DEFAULT_GEN_COUNT = 5
-NUM_OF_CR = 30
+NUM_OF_CR = 100
 NUM_OF_ELITES = 5
 NUM_OF_RANDOM = 5
 MIN_LEN = 2
-MAX_LEN = 12
-MUTATION_FREQ = 0.1
-MUTATION_AMNT = 0.1
-MAX_GROWTH_RT = 1.05
-DIST_LIMIT_RT = 1.05
+MAX_LEN = 5
+MUTATION_FREQ = 0.2
+MUTATION_AMNT = 0.2
+MAX_GROWTH_RT = 1.2
+DIST_LIMIT_RT = 1.2
 
 main = MainApp(
+    base_dir = BASE_DIR,
     pool_size = NUM_OF_PROCESSES,
     max_frame = MAX_SIM_FRAMES,
     population_size = NUM_OF_CR,
@@ -37,7 +38,6 @@ main = MainApp(
 )
 
 main.run(
-    base_dir = BASE_DIR,
     num_of_generation = NUM_OF_GENERATION,
     save_each   = SAVE_EACH,
     report_each = REPORT_EACH,

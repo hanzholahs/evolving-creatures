@@ -69,9 +69,9 @@ class AppTest(unittest.TestCase):
                  save_each = save_each,
                  base_dir = base_dir, 
                  num_of_generation = num_gens)
-        self.assertEqual(len(os.listdir(base_dir + "/pop")), num_gens + 1)
+        self.assertEqual(len(os.listdir(base_dir + "/pop")), num_gens + 1) # +1 for initialization and after simulation
         
-        for i in range(num_gens + 1):
+        for i in range(num_gens + 1): # +1 for initialization and after simulation
             self.assertEqual(len(os.listdir(f"{base_dir}/pop/{i}")), pop_size)
         
         
@@ -112,7 +112,7 @@ class AppTest(unittest.TestCase):
         main.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=num_gens, log_console = True)
     
         self.assertTrue(os.path.exists(os.path.join(base_dir, "report")))
-        self.assertEqual(len(os.listdir(os.path.join(base_dir, "report"))), num_gens + 1)
+        self.assertEqual(len(os.listdir(os.path.join(base_dir, "report"))), num_gens + 1) # +1 for initialization and after simulation
     
     
     def testContinousRun(self):
@@ -125,6 +125,7 @@ class AppTest(unittest.TestCase):
         print("\nApp 1 is running")
         main1 = app.MainApp(base_dir = base_dir, population_size = pop_size, pool_size = 8)
         main1.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=num_gens, log_console = True)
+        
         
         main2 = app.MainApp(base_dir = base_dir, population_size = pop_size, pool_size = 8, load_progress = True)
         
@@ -152,11 +153,11 @@ class AppTest(unittest.TestCase):
         print("\nApp 3 is running")
         main3.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=num_gens, log_console = True)
         
-        pop_dir = os.path.join(base_dir, "pop", str(num_gens*3))
+        pop_dir = os.path.join(base_dir, "pop", str(num_gens))
         report_dir = os.path.join(base_dir, "report")
-
+        
         self.assertTrue(os.path.exists(pop_dir))
         self.assertEqual(len(os.listdir(pop_dir)), pop_size)
         
         self.assertTrue(os.path.exists(report_dir))
-        self.assertEqual(len(os.listdir(report_dir)), (num_gens * 3) + 1)
+        self.assertEqual(len(os.listdir(report_dir)), (num_gens) + 1)

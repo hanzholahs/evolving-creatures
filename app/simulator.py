@@ -68,6 +68,9 @@ class MultiSimulator():
         self.sims = [Simulator(i) for i in range(pool_size)]
 
     def eval_population(self, pop:population.Population, max_frame:int = 2400, dirname = ".urdf/"):
+        for cr in pop.creatures:
+            cr.reset_motors()
+        
         if not os.path.exists(dirname):
             os.makedirs(dirname)
         sim_id = 0
