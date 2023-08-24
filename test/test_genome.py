@@ -6,8 +6,9 @@ class GenotypeTest(unittest.TestCase):
     def testGenotypeRandomInitializer(self):
         self.assertIsNotNone(genome.Genome.init_genome)
         
-        dna = genome.Genome.init_genome(5, 10)
-        self.assertEqual(dna.shape, (5, 10))
+        dna = genome.Genome.init_genome(5)
+        spec = genome.Genome.get_spec()
+        self.assertEqual(dna.shape, (5, len(spec)))
         self.assertIsInstance(dna, np.ndarray)
 
         for _ in range(10):
@@ -19,9 +20,7 @@ class GenotypeTest(unittest.TestCase):
             self.assertEqual(dna.shape[1], len(genome.Genome.get_spec()))
 
     def testGenotypeSpecification(self):
-        self.assertIsNotNone(genome.Genome.set_spec)
         self.assertIsNotNone(genome.Genome.get_spec)
-        self.assertIsInstance(genome.Genome.set_spec(), dict)
         self.assertIsInstance(genome.Genome.get_spec(), dict)
 
         spec = genome.Genome.get_spec()
