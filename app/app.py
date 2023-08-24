@@ -11,7 +11,7 @@ now = datetime.datetime.now
 
 class MainApp:
     def __init__(self,
-                 base_dir:str = ".sim",
+                 base_dir:str,
                  load_progress:bool = False,
                  multiprocess:bool = True,
                  pool_size:int = 5,
@@ -28,6 +28,8 @@ class MainApp:
                  mutation_freq:float = 0.1,
                  mutation_amnt:float = 0.1,
                  dist_limit_rt:float = 1.025) -> None:
+        if base_dir is None:
+            raise Exception("`base_dir` cannot be empty.")
         
         # Set app specification
         self.base_dir = base_dir
@@ -53,11 +55,11 @@ class MainApp:
         self.build_simulator()
         self.reset_population()
         
-        self.sim.eval_population(self.pop, self.max_frame)
         self.save_population()
+        self.sim.eval_population(self.pop, self.max_frame)
         self.generate_report()
         
-        if load_progress and os.path.exists(os.path.join(self.base_dir, "pop")): 
+        if load_progress and os.path.exists(os.path.join(self.base_dir, "pop"))
             self.load_population()
         
     def build_simulator(self, 
