@@ -15,21 +15,20 @@ class Population:
         self.min_dist = 0
         self.avg_dist = 0
         self.reset_population()
-        self.expanded_links_max_length()
         
     def expanded_links_max_length(self):
-        self.max_expanded_length = max(len(cr.get_expanded_links()) for cr in self.creatures)
+        self.max_expanded_length = np.max([len(cr.get_expanded_links()) for cr in self.creatures])
         
     def flat_links_max_length(self):
-        self.max_flat_length = max(len(cr.get_expanded_links()) for cr in self.creatures)
+        self.max_flat_length = np.max([len(cr.get_flat_links()) for cr in self.creatures])
 
     def reset_population(self, creatures:list[creature.Creature] = None):
         if creatures == None:
             self.creatures = [creature.Creature(self.default_gene_count) for _ in range(self.population_size)]
         else:
-            assert type(creatures) == list and len(creatures) > 0
+            assert type(creatures) == list
             assert type(creatures[0]) == creature.Creature
-            for old_creature in self.creatures:
+            for old_creature in self.creatures: 
                 del old_creature
             self.creatures = creatures
             self.population_size = len(self.creatures)
@@ -45,15 +44,46 @@ class Population:
         self.population_size = len(self.creatures)
         self.expanded_links_max_length()
 
+    def to_csvs(self, base_folder = ".", identifier = "dna"):
+        Population.__to_csvs(self.creatures, base_folder = base_folder, identifier = identifier)
+
+    def from_csvs(self, base_folder = ".", identifier = "dna"):
+        new_creatures = Population.__from_csvs(base_folder = base_folder, identifier = identifier)
+        self.reset_population(new_creatures)
+
+    def fittest_to_csvs(self, n_fittest = 3, base_folder = ".", identifier = "dna"):
+        fits = evolution.Selection.eval_fitness(self.creatures)
+        fittest_ids = fits.argsort()[-n_fittest:][::-1] 
+        fittest_crs = [self.creatures[id] for id in fittest_ids]
+        Population.__to_csvs(fittest_crs, base_folder = base_folder, identifier = identifier)
+
+    def generate_report(self, generation, base_folder = ".tmp"):
+        n_exp_link  = [len(cr.get_expanded_links()) for cr in self.creatures]
+        n_flat_link = [len(cr.get_flat_links()) for cr in self.creatures]
+        dists = [cr.get_distance() for cr in self.creatures]
+        fits  = list(evolution.Selection.eval_fitness(self.creatures))
+
+        file_names = [
+            f"{generation}_n_exp_links.csv",
+            f"{generation}_n_flat_links.csv",
+            f"{generation}_distances.csv",
+            f"{generation}_fitness.csv",
+        ]
+
+        Population.__generate_report_csv(file_names[0], n_exp_link, base_folder)
+        Population.__generate_report_csv(file_names[1], n_flat_link, base_folder)
+        Population.__generate_report_csv(file_names[2], dists, base_folder)
+        Population.__generate_report_csv(file_names[3], fits, base_folder)
+
     def new_generation(self,
-                       num_of_elites:int = 0,
-                       num_of_random:int = 0,
+                       num_of_elites:int = 1,
+                       num_of_random:int = 1,
                        min_length:int = 2,
-                       max_length:int = 5,
+                       max_length:int = 7,
                        mutation_freq:float = 0.1,
                        mutation_amnt:float = 0.1,
-                       max_growth_rt:float = 1.025,
-                       dist_limit_rt:float = 1.025):
+                       max_growth_rt:float = 1.2,
+                       dist_limit_rt:float = 1.2):
         assert num_of_elites < self.population_size
         assert num_of_random < self.population_size
         assert num_of_elites + num_of_random < self.population_size
@@ -63,6 +93,8 @@ class Population:
         assert 0 <= mutation_amnt and mutation_amnt <= 1
         
         # upper limit for extended links
+        self.expanded_links_max_length()
+        self.flat_links_max_length()
         max_expanded_length = self.max_expanded_length * (max_growth_rt)
 
         # eliminate cheating creatures manually by incremental fit increase
@@ -85,48 +117,28 @@ class Population:
         for _ in range(self.population_size - num_of_elites - num_of_random):
             fits = evolution.Selection.eval_fitness(self.creatures)
             p1, p2 = evolution.Selection.select_parents(self.creatures, fits)
-            new_cr = creature.Creature(1)
-            while len(new_cr.get_expanded_links()) > max_expanded_length:
+            new_cr = None
+            while new_cr is None or len(new_cr.get_expanded_links()) > max_expanded_length:
+                new_cr = creature.Creature(1)
                 new_cr.update_dna(evolution.Mating.mate(
-                    p1.dna,
-                    min_length,
-                    max_length,
-                    max_growth_rt,
-                    mutation_freq,
-                    mutation_amnt
+                    dna1 = p1.dna,
+                    dna2 = p2.dna,
+                    min_length = min_length,
+                    max_length = max_length,
+                    max_growth_rt = max_growth_rt,
+                    mutation_freq = mutation_freq,
+                    mutation_amnt = mutation_amnt
                 ))
             new_creatures.append(new_cr)
         for index in fittest_indices:
-            # new_cr = creature.Creature(self.default_gene_count)
-            # new_cr.update_dna(self.creatures[index].dna.copy())
             new_cr = copy.copy(self.creatures[index])
             new_creatures.append(new_cr)
         for _ in range(num_of_random):
             new_cr = creature.Creature(1)
-            while len(new_cr.get_expanded_links()) > max_expanded_length:
-                new_cr.update_dna(random.choice(self.creatures).dna)
             new_cr = copy.copy(random.choice(self.creatures))
             new_creatures.append(new_cr)
 
         self.reset_population(new_creatures)
-
-    def generate_report(self, generation, base_folder = ".tmp"):
-        n_exp_link  = [len(cr.get_expanded_links()) for cr in self.creatures]
-        n_flat_link = [len(cr.get_flat_links()) for cr in self.creatures]
-        dists = [cr.get_distance() for cr in self.creatures]
-        fits  = list(evolution.Selection.eval_fitness(self.creatures))
-
-        file_names = [
-            f"{generation}_n_exp_links.csv",
-            f"{generation}_n_flat_links.csv",
-            f"{generation}_distances.csv",
-            f"{generation}_fitness.csv",
-        ]
-
-        Population.__generate_report_csv(file_names[0], n_exp_link, base_folder)
-        Population.__generate_report_csv(file_names[1], n_flat_link, base_folder)
-        Population.__generate_report_csv(file_names[2], dists, base_folder)
-        Population.__generate_report_csv(file_names[3], fits, base_folder)
 
     @staticmethod
     def __generate_report_csv(csv_file_name, csv_rows, base_folder = ".tmp"):
@@ -134,20 +146,6 @@ class Population:
             os.makedirs(base_folder, exist_ok=True)
         with open(os.path.join(base_folder, csv_file_name), "w") as f:
             f.write(','.join(map(str, csv_rows)) + "\n")
-
-    def to_csvs(self, base_folder = ".", identifier = "dna"):
-        Population.__to_csvs(self.creatures, base_folder = base_folder, identifier = identifier)
-
-    def from_csvs(self, base_folder = ".", identifier = "dna"):
-        new_creatures = Population.__from_csvs(base_folder = base_folder, identifier = identifier)
-        self.reset_population(new_creatures)
-
-    def fittest_to_csvs(self, n_fittest = 3, base_folder = ".", identifier = "dna"):
-        fits = evolution.Selection.eval_fitness(self.creatures)
-        fittest_ids = fits.argsort()[-n_fittest:][::-1] 
-        fittest_crs = [self.creatures[id] for id in fittest_ids]
-        Population.__to_csvs(fittest_crs, base_folder = base_folder, identifier = identifier)
-
     @staticmethod
     def __to_csvs(creatures, base_folder = ".tmp", identifier = "dna"):
         if not os.path.exists(base_folder):
