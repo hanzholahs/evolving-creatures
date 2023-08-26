@@ -16,6 +16,7 @@ class MainApp:
                  multiprocess:bool = True,
                  pool_size:int = 5,
                  max_frame:int = 1200,
+                 incremental:bool = False,
                  population_size:int = 5,
                  current_generation:int = 0,
                  num_of_generation:int = 10,
@@ -35,7 +36,10 @@ class MainApp:
         self.base_dir = base_dir
         self.multiprocess = multiprocess
         self.pool_size = pool_size
+        self.min_frame = int(max_frame / 5)
         self.max_frame = max_frame
+        self.incremental = incremental
+        self.increment_frame = (max_frame - self.min_frame) / (0.8 * num_of_generation)
         self.population_size = population_size
         self.current_generation = current_generation
         self.num_of_generation = num_of_generation
@@ -154,7 +158,11 @@ class MainApp:
             
         # run simulation for some generations
         while self.current_generation < self.num_of_generation:
-            self.sim.eval_population(self.pop, self.max_frame)
+            if self.incremental and self.current_generation < 0.8 * self.num_of_generation:
+                num_frame = int(self.min_frame + self.current_generation * self.increment_frame)
+                self.sim.eval_population(self.pop, num_frame)
+            else:
+                self.sim.eval_population(self.pop, self.max_frame)
             
             if save_each is not None and self.current_generation % save_each == 0:
                 self.save_population()
@@ -228,16 +236,24 @@ class MainApp:
         max_fl_link = max([len(cr.get_flat_links()) for cr in self.pop.creatures])
         dists = np.mean([cr.get_distance() for cr in self.pop.creatures])
         fits  = np.mean(eval_fitness(self.pop.creatures))
-                
+        zonk  = np.sum(dists == 0)
+
+        if self.incremental and self.current_generation < 0.8 * self.num_of_generation:
+            num_frame = int(self.min_frame + self.current_generation * self.increment_frame)
+        else:
+            num_frame = self.max_frame
+
         text = "".join([
             f"{now()},",
             f"{str(self.current_generation)},".rjust(10, " "),
+            f"{round(dists, 2):.2f},".rjust(10, " "),
+            f"{round(fits, 2):.2f}".rjust(10, " "),
             f"{round(n_ex_link, 2):.2f},".rjust(10, " "),
             f"{round(n_fl_link, 2):.2f},".rjust(10, " "),
-            f"{round(max_ex_link, 2):.2f},".rjust(10, " "),
-            f"{round(max_fl_link, 2):.2f},".rjust(10, " "),
-            f"{round(dists, 2):.2f},".rjust(10, " "),
-            f"{round(fits, 2):.2f}".rjust(10, " ")
+            f"{max_ex_link},".rjust(10, " "),
+            f"{max_fl_link},".rjust(10, " "),
+            f"{zonk}".rjust(10, " "),
+            f"{num_frame}".rjust(10, " ")       
         ])
         
         if log_console: print(text)
