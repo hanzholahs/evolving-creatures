@@ -36,7 +36,7 @@ class MainApp:
         self.base_dir = base_dir
         self.multiprocess = multiprocess
         self.pool_size = pool_size
-        self.min_frame = int(max_frame / 5)
+        self.min_frame = int(max_frame / 10)
         self.max_frame = max_frame
         self.incremental = incremental
         self.increment_frame = (max_frame - self.min_frame) / (0.8 * num_of_generation)
@@ -194,8 +194,8 @@ class MainApp:
             f"{round(n_fl_link, 2):.2f},".rjust(10, " "),
             f"{max_ex_link},".rjust(10, " "),
             f"{max_fl_link},".rjust(10, " "),
-            f"{zonk}".rjust(10, " "),
-            f"{num_frame}".rjust(10, " ")       
+            f"{zonk},".rjust(10, " "),
+            f"{num_frame},".rjust(10, " ")       
         ])
         
         if log_console: print(text)

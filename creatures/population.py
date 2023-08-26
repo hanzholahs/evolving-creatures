@@ -15,12 +15,6 @@ class Population:
         self.min_dist = 0
         self.avg_dist = 0
         self.reset_population()
-        
-    def expanded_links_max_length(self):
-        self.max_expanded_length = np.max([len(cr.get_expanded_links()) for cr in self.creatures])
-        
-    def flat_links_max_length(self):
-        self.max_flat_length = np.max([len(cr.get_flat_links()) for cr in self.creatures])
 
     def reset_population(self, creatures:list[creature.Creature] = None):
         if creatures == None:
@@ -32,17 +26,14 @@ class Population:
                 del old_creature
             self.creatures = creatures
             self.population_size = len(self.creatures)
-        self.expanded_links_max_length()
 
     def add_creature(self, cr:creature.Creature):
         self.creatures.append(cr)
         self.population_size = len(self.creatures)
-        self.expanded_links_max_length()
 
     def add_creatures(self, creatures:list[creature.Creature]):
         self.creatures.extend(creatures)
         self.population_size = len(self.creatures)
-        self.expanded_links_max_length()
 
     def to_csvs(self, base_folder = ".", identifier = "dna"):
         Population.__to_csvs(self.creatures, base_folder = base_folder, identifier = identifier)
@@ -93,9 +84,8 @@ class Population:
         assert 0 <= mutation_amnt and mutation_amnt <= 1
         
         # upper limit for extended links
-        self.expanded_links_max_length()
-        self.flat_links_max_length()
-        max_expanded_length = self.max_expanded_length * (max_growth_rt)
+        max_expanded_length = np.max([len(cr.get_expanded_links()) for cr in self.creatures])
+        max_expanded_length = max_expanded_length * (max_growth_rt)
 
         # eliminate cheating creatures manually by incremental fit increase
         for cr in self.creatures:

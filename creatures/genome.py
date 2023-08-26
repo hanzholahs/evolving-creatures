@@ -36,7 +36,7 @@ class Genome:
                 "link_length_2": {"scale":2.5},
                 "link_length_3": {"scale":2.5},
                 "link_radius": {"scale":2.5},
-                "link_recurrence": {"scale":3, "type":"discrete"},
+                "link_recurrence": {"scale":5, "type":"discrete"},
                 "link_mass_density": {"scale":5},
                 "joint_type": {"scale":2, "type":"categorical"},
                 "joint_axis_xyz": {"scale":3, "type": "categorical"},
