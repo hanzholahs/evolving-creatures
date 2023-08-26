@@ -66,15 +66,7 @@ class MainApp:
         if load_progress and os.path.exists(os.path.join(self.base_dir, "pop")):
             self.load_population()
         
-    def build_simulator(self, 
-                        multiprocess:bool = None, 
-                        pool_size:int = None) -> None:
-        
-        # Change sim specification
-        if multiprocess is not None:
-            self.multiprocess = multiprocess
-        if pool_size is not None:
-            self.pool_size = pool_size
+    def build_simulator(self) -> None:
         if ((self.multiprocess == False and self.pool_size > 1) or
             (self.multiprocess == True and self.pool_size < 2)):         
             raise Exception(f"Multiprocess cannot {self.multiprocess} " +
@@ -93,16 +85,7 @@ class MainApp:
         else:
             self.sim = simulator.Simulator()
             
-    def reset_population(self, 
-                         population_size:int = None, 
-                         default_gene_count:int = None) -> None:
-        
-        # Change pop specification
-        if population_size is not None:
-            self.population_size = population_size
-        if default_gene_count is not None:
-            self.default_gene_count = default_gene_count        
-
+    def reset_population(self) -> None:      
         # Instatiate population
         if self.pop == None:
             self.pop = population.Population(
@@ -113,45 +96,13 @@ class MainApp:
             self.pop.reset_population()
         
     def run(self,
-            base_dir:str = None,
-            save_after:bool = True,
+            save_after:bool = False,
             save_each:int = None,
-            report_after:bool = True,
+            report_after:bool = False,
             report_each:int = None,
-            log_after:bool = True,
+            log_after:bool = False,
             log_each:int = None,
-            log_console:bool = False,
-            num_of_generation:int = None,
-            num_of_elites:int = None,
-            num_of_random:int = None,
-            min_length:int = None,
-            max_length:int = None,
-            max_growth_rt:float = None,
-            mutation_freq:float = None,
-            mutation_amnt:float = None,
-            dist_limit_rt:float = None) -> None:
-        
-        # change sim run specification
-        if base_dir is not None:
-            self.base_dir = base_dir
-        if num_of_generation is not None:
-            self.num_of_generation = num_of_generation
-        if num_of_elites is not None:
-            self.num_of_elites = num_of_elites
-        if num_of_random is not None:
-            self.num_of_random = num_of_random
-        if min_length is not None:
-            self.min_length = min_length
-        if max_length is not None:
-            self.max_length = max_length
-        if max_growth_rt is not None:
-            self.max_growth_rt = max_growth_rt
-        if mutation_freq is not None:
-            self.mutation_freq = mutation_freq
-        if mutation_amnt is not None:
-            self.mutation_amnt = mutation_amnt
-        if dist_limit_rt is not None:
-            self.dist_limit_rt = dist_limit_rt
+            log_console:bool = False) -> None:
             
         self.print_setting(save_after, save_each, report_after, report_each, \
                            log_after, log_each, log_console)
@@ -196,10 +147,7 @@ class MainApp:
         if save_after:
             self.save_population()
         
-    def save_population(self, base_dir = None) -> None:
-        if base_dir is not None:
-            self.base_dir = base_dir
-        
+    def save_population(self) -> None:        
         save_path = os.path.join(self.base_dir, "pop", str(self.current_generation))
         
         if not os.path.exists(save_path):
@@ -207,22 +155,16 @@ class MainApp:
         
         self.pop.to_csvs(base_folder = save_path, identifier = "cr")
     
-    def load_population(self, 
-                        base_dir = None, 
-                        current_generation:int = None) -> None:
-        if base_dir is not None:
-            self.base_dir = base_dir
-        if current_generation is None:
+    def load_population(self, current_generation = None) -> None:
+        if current_generation is not None:
+            self.current_generation = current_generation
+        else: 
             self.current_generation = max([int(d) for d in os.listdir(self.base_dir + "/pop")])
-            
         load_path = os.path.join(self.base_dir, "pop", str(self.current_generation))
         
         self.pop.from_csvs(base_folder = load_path, identifier = "cr")
         
-    def generate_report(self, base_dir = None) -> None:
-        if base_dir is not None:
-            self.base_dir = base_dir
-        
+    def generate_report(self) -> None:        
         report_path = os.path.join(self.base_dir, "report", str(self.current_generation))
         
         self.pop.generate_report(self.current_generation, report_path)

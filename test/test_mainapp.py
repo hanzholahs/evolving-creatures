@@ -61,14 +61,12 @@ class AppTest(unittest.TestCase):
         
         if os.path.exists(base_dir): shutil.rmtree(base_dir)
         
-        main = app.MainApp(base_dir = base_dir, population_size = pop_size)
+        main = app.MainApp(base_dir = base_dir, population_size = pop_size, num_of_generation = num_gens)
         self.assertTrue(os.path.exists(base_dir))
         self.assertEqual(len(os.listdir(base_dir + "/pop/0")), pop_size)
         
         main.run(save_after = True,
-                 save_each = save_each,
-                 base_dir = base_dir, 
-                 num_of_generation = num_gens)
+                 save_each = save_each)
         self.assertEqual(len(os.listdir(base_dir + "/pop")), num_gens + 1) # +1 for initialization and after simulation
         
         for i in range(num_gens + 1): # +1 for initialization and after simulation
@@ -85,9 +83,13 @@ class AppTest(unittest.TestCase):
         
         if os.path.exists(base_dir): shutil.rmtree(base_dir)
         
-        main = app.MainApp(base_dir = base_dir, population_size = pop_size)
-        main.run(save_after = True, num_of_generation = num_gens)
-        main.build_simulator(False, 1)
+        main = app.MainApp(base_dir = base_dir, population_size = pop_size, num_of_generation = num_gens)
+        main.run(save_after = True)
+        
+        main.multiprocess = False
+        main.pool_size = 1
+        main.build_simulator()
+        
         for cr in main.pop.creatures:
             old_creatures.append(cr)
             del cr
@@ -108,8 +110,9 @@ class AppTest(unittest.TestCase):
         num_gens  = 5
         
         if os.path.exists(base_dir): shutil.rmtree(base_dir)
-        main = app.MainApp(base_dir = base_dir, population_size = pop_size)
-        main.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=num_gens, log_console = True)
+        
+        main = app.MainApp(base_dir = base_dir, num_of_generation=num_gens, population_size = pop_size)
+        main.run(save_after = True, report_after = True, save_each = 1, report_each = 1, log_each = 1)
     
         self.assertTrue(os.path.exists(os.path.join(base_dir, "report")))
         self.assertEqual(len(os.listdir(os.path.join(base_dir, "report"))), num_gens + 1) # +1 for initialization and after simulation
@@ -118,46 +121,33 @@ class AppTest(unittest.TestCase):
     def testContinousRun(self):
         base_dir  = ".tmp/simulation-test-run"
         pop_size  = 5
-        num_gens  = 5
         
         if os.path.exists(base_dir): shutil.rmtree(base_dir)
         
-        print("\nApp 1 is running")
-        main1 = app.MainApp(base_dir = base_dir, population_size = pop_size, pool_size = 8)
-        main1.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=num_gens, log_console = True)
+        for i in range(5):
+            num_gens = i + 1
         
-        
-        main2 = app.MainApp(base_dir = base_dir, population_size = pop_size, pool_size = 8, load_progress = True)
-        
-        print("\nApp 2 is initializing")
-        main2.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=0, log_console = True)
-        
-        for i in range(pop_size):
-            main2.pop.creatures[i].reset_motors()
-            self.assertEqual(main1.pop.creatures[i].dna.shape, main2.pop.creatures[i].dna.shape)
-            self.assertTrue((main1.pop.creatures[i].dna == main2.pop.creatures[i].dna).all())
+            main1 = app.MainApp(base_dir = base_dir, population_size = pop_size,  num_of_generation = num_gens, pool_size = 8)
+            main1.run(save_after = True, save_each = 1, log_each = 1)
             
-        print("\nApp 2 is running")
-        main2.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=num_gens, log_console = True)
-        
-        main3 = app.MainApp(base_dir = base_dir, population_size = pop_size, pool_size = 8, load_progress = True)
-        
-        print("\nApp 3 is initializing")
-        main3.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=0, log_console = True)
-        
-        for i in range(pop_size):
-            main3.pop.creatures[i].reset_motors()
-            self.assertEqual(main2.pop.creatures[i].dna.shape, main3.pop.creatures[i].dna.shape)
-            self.assertTrue((main2.pop.creatures[i].dna == main3.pop.creatures[i].dna).all())
+            main2 = app.MainApp(base_dir = base_dir, population_size = pop_size, num_of_generation = num_gens, pool_size = 8,
+                                load_progress = True)
+            main2.run(save_after = True, save_each = 1, log_each = 1)
             
-        print("\nApp 3 is running")
-        main3.run(save_each = 1, report_each = 1, log_each = 1, num_of_generation=num_gens, log_console = True)
+            main3 = app.MainApp(base_dir = base_dir, population_size = pop_size, num_of_generation = num_gens, pool_size = 1,
+                                multiprocess = False, load_progress = True)
+            main3.run(save_after = True, report_after = True, save_each = 1, report_each = 1, log_each = 1)
+            
+            for i in range(pop_size):
+                self.assertEqual(main1.pop.creatures[i].dna.shape, main2.pop.creatures[i].dna.shape)
+                self.assertTrue((main1.pop.creatures[i].dna == main2.pop.creatures[i].dna).all())
+                self.assertEqual(main2.pop.creatures[i].dna.shape, main3.pop.creatures[i].dna.shape)
+                self.assertTrue((main2.pop.creatures[i].dna == main3.pop.creatures[i].dna).all())
         
-        pop_dir = os.path.join(base_dir, "pop", str(num_gens))
-        report_dir = os.path.join(base_dir, "report")
-        
-        self.assertTrue(os.path.exists(pop_dir))
-        self.assertEqual(len(os.listdir(pop_dir)), pop_size)
-        
-        self.assertTrue(os.path.exists(report_dir))
-        self.assertEqual(len(os.listdir(report_dir)), (num_gens) + 1)
+            pop_dir = os.path.join(base_dir, "pop", str(num_gens))
+            self.assertTrue(os.path.exists(pop_dir))
+            self.assertEqual(len(os.listdir(pop_dir)), pop_size)
+            
+            report_dir = os.path.join(base_dir, "report")
+            self.assertTrue(os.path.exists(report_dir))
+            self.assertEqual(len(os.listdir(report_dir)), (num_gens) + 1)
